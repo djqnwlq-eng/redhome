@@ -109,20 +109,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithGoogle = async () => {
     if (!auth || !db) throw new Error('Firebase is not configured');
     const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
 
-    // Firestore에서 사용자 확인
-    const userDoc = await getDoc(doc(db, 'users', result.user.uid));
-    if (!userDoc.exists()) {
-      // 새 사용자면 프로필 생성
-      await setDoc(doc(db, 'users', result.user.uid), {
-        uid: result.user.uid,
-        email: result.user.email,
-        displayName: result.user.displayName,
-        photoURL: result.user.photoURL,
-        role: 'user',
-        createdAt: serverTimestamp(),
-      });
+    try {
+      const result = await signInWithPopup(auth, provider);
+
+      // Firestore에서 사용자 확인
+      const userDoc = await getDoc(doc(db, 'users', result.user.uid));
+      if (!userDoc.exists()) {
+        // 새 사용자면 프로필 생성
+        await setDoc(doc(db, 'users', result.user.uid), {
+          uid: result.user.uid,
+          email: result.user.email,
+          displayName: result.user.displayName,
+          photoURL: result.user.photoURL,
+          role: 'user',
+          createdAt: serverTimestamp(),
+        });
+      }
+    } catch (error: unknown) {
+      // 팝업 차단 또는 사용자 취소 에러 처리
+      const firebaseError = error as { code?: string };
+      if (firebaseError.code === 'auth/popup-closed-by-user') {
+        return; // 사용자가 팝업을 닫은 경우 무시
+      }
+      throw error;
     }
   };
 
