@@ -14,60 +14,47 @@ function extractCDATA(text: string): string {
   return cdataMatch ? cdataMatch[1].trim() : text.trim();
 }
 
-function cleanTitle(title: string): string {
-  // "제목 - 출처" 형식에서 제목만 추출
-  const parts = title.split(' - ');
-  if (parts.length > 1) {
-    parts.pop(); // 마지막 부분(출처) 제거
-    return parts.join(' - ').trim();
-  }
-  return title.trim();
-}
-
-function extractSource(title: string): string {
-  // "제목 - 출처" 형식에서 출처 추출
-  const parts = title.split(' - ');
-  if (parts.length > 1) {
-    return parts[parts.length - 1].trim();
-  }
-  return '';
-}
-
-function parseGoogleNewsItem(itemXml: string): NewsItem | null {
+function parseBeautynuryItem(itemXml: string): NewsItem | null {
   const titleMatch = itemXml.match(/<title>([\s\S]*?)<\/title>/);
   const linkMatch = itemXml.match(/<link>([\s\S]*?)<\/link>/);
-  const pubDateMatch = itemXml.match(/<pubDate>([\s\S]*?)<\/pubDate>/);
-  const sourceMatch = itemXml.match(/<source[^>]*>([\s\S]*?)<\/source>/);
+  const dateMatch = itemXml.match(/<dc:date>([\s\S]*?)<\/dc:date>/);
+  const thumbMatch = itemXml.match(/<thumbimg>([\s\S]*?)<\/thumbimg>/);
 
   if (!titleMatch || !linkMatch) return null;
 
-  const fullTitle = extractCDATA(titleMatch[1]);
-  const title = cleanTitle(fullTitle);
-  const source = sourceMatch ? extractCDATA(sourceMatch[1]) : extractSource(fullTitle);
+  const title = extractCDATA(titleMatch[1]);
+  const link = extractCDATA(linkMatch[1]);
+
+  // 썸네일 URL 생성 (상대 경로를 절대 경로로)
+  let thumbnail = '';
+  if (thumbMatch && thumbMatch[1]) {
+    const thumbPath = thumbMatch[1].trim();
+    if (thumbPath) {
+      thumbnail = thumbPath.startsWith('http')
+        ? thumbPath
+        : `https://www.beautynury.com${thumbPath}`;
+    }
+  }
 
   return {
     title,
-    link: linkMatch[1].trim(),
-    description: title, // 구글 뉴스는 별도 description이 없어서 제목 사용
-    thumbnail: '', // 구글 뉴스 RSS에는 썸네일 없음
-    pubDate: pubDateMatch ? pubDateMatch[1].trim() : '',
-    source,
+    link,
+    description: title,
+    thumbnail,
+    pubDate: dateMatch ? dateMatch[1].trim() : '',
+    source: '뷰티누리',
   };
 }
 
 export async function GET() {
   try {
-    // 구글 뉴스 RSS - 화장품 뷰티 검색
-    const searchQuery = encodeURIComponent('화장품 뷰티');
-    const response = await fetch(
-      `https://news.google.com/rss/search?q=${searchQuery}&hl=ko&gl=KR&ceid=KR:ko`,
-      {
-        next: { revalidate: 3600 }, // 1시간 캐시
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0)',
-        },
-      }
-    );
+    // 뷰티누리 RSS - 화장품/뷰티 전문 뉴스
+    const response = await fetch('https://www.beautynury.com/rss', {
+      next: { revalidate: 3600 }, // 1시간 캐시
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0)',
+      },
+    });
 
     if (!response.ok) {
       throw new Error('RSS fetch failed');
@@ -81,7 +68,7 @@ export async function GET() {
     let match;
 
     while ((match = itemRegex.exec(xml)) !== null && items.length < 6) {
-      const parsed = parseGoogleNewsItem(match[1]);
+      const parsed = parseBeautynuryItem(match[1]);
       if (parsed && parsed.title) {
         items.push(parsed);
       }
