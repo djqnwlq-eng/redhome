@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from "react";
-import { Search, MessageCircle } from "lucide-react";
+import Link from "next/link";
+import { Search, MessageCircle, User, LogOut, Settings } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface NavLink {
   href: string;
@@ -85,6 +87,7 @@ export default function HeroSection({
 }: HeroSectionProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
+  const { user, userProfile, logout, isAdmin, loading: authLoading } = useAuth();
 
   useEffect(() => {
     setIsLoaded(true);
@@ -116,7 +119,7 @@ export default function HeroSection({
 
   return (
     <>
-      <header className={`absolute inset-x-0 top-0 p-6 md:p-8 z-10 transition-all duration-1000 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
+      <header className={`absolute inset-x-0 top-0 p-6 md:p-8 z-50 transition-all duration-1000 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
         <div className="container mx-auto flex justify-between items-center">
           {/* 로고 + 브랜드명 */}
           <div className="flex items-center gap-2">
@@ -138,13 +141,59 @@ export default function HeroSection({
               </a>
             ))}
           </nav>
-          <div className="flex items-center space-x-4">
-            <button type="button" aria-label="Search" className="hover:text-red-500 transition-colors">
-              <Search className="h-6 w-6" />
-            </button>
-            <button className="border border-white rounded-full px-6 py-2 text-sm font-medium hover:bg-red-600 hover:text-white hover:border-red-600 transition-all duration-300">
+          <div className="flex items-center space-x-3">
+            {!authLoading && (
+              <>
+                {user ? (
+                  <>
+                    {isAdmin && (
+                      <Link
+                        href="/admin"
+                        className="hidden sm:flex items-center gap-1.5 text-sm text-zinc-300 hover:text-red-500 transition-colors"
+                      >
+                        <Settings className="h-4 w-4" />
+                        관리자
+                      </Link>
+                    )}
+                    <Link
+                      href="/mypage"
+                      className="flex items-center gap-1.5 text-sm text-zinc-300 hover:text-red-500 transition-colors"
+                    >
+                      <User className="h-4 w-4" />
+                      <span className="hidden sm:inline">{userProfile?.displayName || '마이페이지'}</span>
+                    </Link>
+                    <button
+                      onClick={() => logout()}
+                      className="flex items-center gap-1.5 text-sm text-zinc-400 hover:text-red-500 transition-colors"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span className="hidden sm:inline">로그아웃</span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/login"
+                      className="text-sm text-zinc-300 hover:text-red-500 transition-colors"
+                    >
+                      로그인
+                    </Link>
+                    <Link
+                      href="/signup"
+                      className="border border-white rounded-full px-4 py-1.5 text-sm font-medium hover:bg-red-600 hover:text-white hover:border-red-600 transition-all duration-300"
+                    >
+                      회원가입
+                    </Link>
+                  </>
+                )}
+              </>
+            )}
+            <a
+              href="#contact"
+              className="border border-red-500 text-red-500 rounded-full px-4 py-1.5 text-sm font-medium hover:bg-red-600 hover:text-white hover:border-red-600 transition-all duration-300"
+            >
               상담신청
-            </button>
+            </a>
           </div>
         </div>
       </header>
@@ -252,7 +301,7 @@ export default function HeroSection({
         </div>
       </main>
 
-      <footer className={`absolute inset-x-0 bottom-0 p-6 md:p-8 z-10 transition-all duration-1000 delay-500 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+      <footer className={`absolute inset-x-0 bottom-0 p-6 md:p-8 z-50 transition-all duration-1000 delay-500 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
         <div className="container mx-auto flex justify-between items-center">
           <div className="text-sm text-gray-400">{versionText}</div>
           <button

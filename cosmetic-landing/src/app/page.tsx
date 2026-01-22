@@ -18,8 +18,8 @@ export default function Home() {
         logoText="R."
         brandName="REDMEDICOS"
         navLinks={[
-          { href: "#problem", label: "고민" },
-          { href: "#solution", label: "솔루션" },
+          { href: "/about", label: "회사소개" },
+          { href: "/products", label: "상품소개" },
           { href: "#features", label: "서비스" },
           { href: "#faq", label: "FAQ" },
           { href: "#contact", label: "상담신청" },

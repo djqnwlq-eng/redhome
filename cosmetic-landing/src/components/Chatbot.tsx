@@ -152,7 +152,7 @@ export default function Chatbot() {
 
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -170,11 +170,21 @@ export default function Chatbot() {
       );
 
       if (!response.ok) {
-        if (response.status === 400 || response.status === 403) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Gemini API Error Response:', response.status, errorData);
+
+        if (response.status === 400 || response.status === 403 || response.status === 401) {
           setIsApiKeyValid(false);
           return 'API 키가 유효하지 않습니다. 키를 다시 확인해주세요.';
         }
-        throw new Error('API 호출 실패');
+        if (response.status === 404) {
+          return '모델을 찾을 수 없습니다. 잠시 후 다시 시도해주세요.';
+        }
+        if (response.status === 429) {
+          return '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.';
+        }
+        // 그 외 에러는 기본 응답으로 폴백
+        return '';
       }
 
       const data = await response.json();
@@ -188,7 +198,8 @@ export default function Chatbot() {
       return botResponse;
     } catch (error) {
       console.error('Gemini API Error:', error);
-      return null as unknown as string;
+      // 네트워크 에러 등의 경우 빈 문자열 반환하여 기본 응답으로 폴백
+      return '';
     }
   };
 
