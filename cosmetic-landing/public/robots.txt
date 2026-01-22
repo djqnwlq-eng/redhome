@@ -1,0 +1,14 @@
+# REDMEDICOS robots.txt
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://cosmetic-landing.vercel.app/sitemap.xml
+
+# Crawl-delay (optional)
+Crawl-delay: 1
+
+# Disallow admin or private paths (if any)
+Disallow: /api/
+Disallow: /_next/
+Disallow: /private/
