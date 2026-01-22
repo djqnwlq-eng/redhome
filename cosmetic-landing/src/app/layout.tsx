@@ -90,7 +90,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body className={`${notoSansKR.variable} font-sans antialiased`}>
+      <body className={`${notoSansKR.variable} antialiased bg-zinc-950 text-white`}>
         {children}
       </body>
     </html>

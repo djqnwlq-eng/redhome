@@ -2,6 +2,7 @@ import HeroSection from '@/components/ui/hero-section-3';
 import Problem from '@/components/Problem';
 import Solution from '@/components/Solution';
 import Features from '@/components/Features';
+import News from '@/components/News';
 import LeadForm from '@/components/LeadForm';
 import FAQ from '@/components/FAQ';
 import FinalCTA from '@/components/FinalCTA';
@@ -34,6 +35,7 @@ export default function Home() {
       <Problem />
       <Solution />
       <Features />
+      <News />
       <LeadForm />
       <FAQ />
       <FinalCTA />
